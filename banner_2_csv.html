@@ -150,7 +150,7 @@
 
   <script>
     const CONFIG = {
-      csvUrl: "https://bperilli.github.io/rassegna/prezzi-banner.csv",
+      csvUrl: "https://bperilli.github.io/banner/prezzi-banner.csv",
       clickUrl: "https://www.sorgenia.it",
       defaultLuce: "0,103",
       defaultGas: "0,37",
@@ -199,6 +199,14 @@
       return String(value || "")
         .replace(/[^0-9,.-]/g, "")
         .trim();
+    }
+
+    function normalizeHeader(value) {
+      return String(value || "")
+        .replace(/^\uFEFF/, "")
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, "_");
     }
 
     function formatPrice(value, unit) {
@@ -260,21 +268,21 @@
       }
 
       const delimiter = detectDelimiter(rows[0]);
-      const first = splitCsvLine(rows[0], delimiter).map((x) => x.toLowerCase());
+      const first = splitCsvLine(rows[0], delimiter).map(normalizeHeader);
       const hasHeader = first.includes("luce") || first.includes("gas");
 
       if (hasHeader) {
         const dataRow = rows[1];
         if (!dataRow) return null;
-        const headers = splitCsvLine(rows[0], delimiter).map((x) => x.toLowerCase());
+        const headers = splitCsvLine(rows[0], delimiter).map(normalizeHeader);
         const values = splitCsvLine(dataRow, delimiter);
         const luceIdx = headers.findIndex((h) => h === "luce" || h === "prezzo_luce");
         const gasIdx = headers.findIndex((h) => h === "gas" || h === "prezzo_gas");
         const validitaIdx = headers.findIndex((h) =>
-          ["validita", "validità", "fino_al", "data_fine", "scadenza"].includes(h)
+          ["validita", "validità", "fino_al", "data_fine", "scadenza", "offerta_valida"].includes(h)
         );
         const scontoIdx = headers.findIndex((h) =>
-          ["sconto", "sconto_bolletta", "sconto_euro", "sconto_bollette"].includes(h)
+          ["sconto", "sconto_bolletta", "sconto_in_bolletta", "sconto_euro", "sconto_bollette"].includes(h)
         );
         if (luceIdx < 0 || gasIdx < 0) return null;
         return {
