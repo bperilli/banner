@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="ad.size" content="width=300,height=250">
+    <script type="text/javascript">var clickTag = "https://www.sorgenia.it";</script>
+    <style>
+        body, html { margin: 0; padding: 0; overflow: hidden; background: #153250; font-family: 'Arial', sans-serif; }
+        
+        .banner { 
+            width: 300px; height: 250px; 
+            background: linear-gradient(135deg, #1a3d61 0%, #153250 100%);
+            color: white; position: relative; cursor: pointer; 
+            border: 1px solid #000; box-sizing: border-box; overflow: hidden;
+        }
+
+        .bg-shape { position: absolute; opacity: 0.15; pointer-events: none; fill: white; }
+        .shape-light { bottom: -5px; left: -10px; width: 70px; }
+        .shape-drop { bottom: 5px; right: -5px; width: 60px; }
+
+        .header { padding: 10px 12px; display: flex; justify-content: space-between; align-items: flex-start; z-index: 2; position: relative; }
+        .logo-img { width: 90px; height: auto; filter: brightness(0) invert(1); }
+        .validita { font-size: 10px; text-align: right; line-height: 1.2; color: #fff; }
+        .date-val { font-weight: bold; display: block; font-size: 11px; }
+
+        .copy { text-align: center; margin-top: -5px; position: relative; z-index: 2; }
+        .titolo { color: #d4e157; font-size: 16px; font-weight: bold; margin-bottom: 2px; }
+        /* Sconto ora è un elemento dinamico */
+        .sconto { font-size: 15px; font-weight: bold; margin-bottom: 10px; }
+
+        .offers-container { display: flex; justify-content: center; gap: 8px; padding: 0 10px; position: relative; z-index: 2; }
+        .box { 
+            background: rgba(255, 255, 255, 0.05); 
+            border: 1.5px solid rgba(255, 255, 255, 0.8);
+            border-radius: 18px; padding: 8px 4px; width: 130px; text-align: center; 
+        }
+        .label { font-size: 14px; font-weight: bold; margin-bottom: 5px; display: block; }
+        .prezzo-val { font-size: 15px; font-weight: bold; color: #d4e157; margin: 2px 0; }
+        .info-label { font-size: 8px; opacity: 0.9; margin-bottom: 6px; }
+        .servizio-val { font-size: 13px; color: #d4e157; font-weight: bold; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 6px; margin-top: 4px; display: block; }
+
+        .cta-container { position: absolute; bottom: 22px; width: 100%; text-align: center; z-index: 3; }
+        .cta { 
+            background-color: #d4e157; color: #153250; 
+            padding: 7px 30px; border-radius: 40px 40px 5px 40px; 
+            font-weight: bold; font-size: 16px; display: inline-block;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .disclaimer { 
+            position: absolute; bottom: 4px; width: 100%; font-size: 5px; 
+            text-align: center; opacity: 0.7; padding: 0 10px; box-sizing: border-box; line-height: 1.1;
+        }
+    </style>
+</head>
+<body>
+    <div class="banner" onclick="window.open(window.clickTag)">
+        <svg class="bg-shape shape-light" viewBox="0 0 100 100"><path d="M50,10A30,30,0,0,0,20,40c0,15,10,25,10,35h40c0-10,10-20,10-35A30,30,0,0,0,50,10Z"/></svg>
+        <svg class="bg-shape shape-drop" viewBox="0 0 100 100"><path d="M50,5C50,5,20,45,20,65A30,30,0,0,0,80,65C80,45,50,5,50,5Z"/></svg>
+
+        <div class="header">
+            <img src="logo.svg" alt="Sorgenia" class="logo-img">
+            <div class="validita">Offerta Valida<br>Fino al <span id="dyn-scadenza" class="date-val">--/--/--</span></div>
+        </div>
+
+        <div class="copy">
+            <div class="titolo">Offerta a Prezzo Fisso per 12 mesi</div>
+            <div class="sconto">Con <span id="dyn-sconto">--</span>€ di Sconto in bolletta!</div>
+        </div>
+
+        <div class="offers-container">
+            <div class="box">
+                <span class="label">Luce</span>
+                <div id="dyn-prezzo-luce" class="prezzo-val">-- €/kWh</div>
+                <div class="info-label">prezzo componente energia</div>
+                <div id="dyn-servizio-luce" class="servizio-val">-- €/POD/Anno</div>
+                <div class="info-label">servizio commerciale</div>
+            </div>
+            <div class="box">
+                <span class="label">Gas</span>
+                <div id="dyn-prezzo-gas" class="prezzo-val">-- €/Smc</div>
+                <div class="info-label">prezzo componente gas</div>
+                <div id="dyn-servizio-gas" class="servizio-val">-- €/PDR/Anno</div>
+                <div class="info-label">servizio commerciale</div>
+            </div>
+        </div>
+
+        <div class="cta-container">
+            <div class="cta">Scopri l'offerta</div>
+        </div>
+
+        <div class="disclaimer">
+            *Prezzi riferiti a utenza domestica con contatore da 3 kW e consumi annui di 2000kWh per l'energia elettrica e 800Smc per il gas. Condizioni su sorgenia.it
+        </div>
+    </div>
+
+    <script>
+        var CONFIG = {
+            // Imposta qui il file JS hostato su GitHub Pages
+            dataScriptUrl: "https://bperilli.github.io/banner/prezzi.js"
+        };
+
+        var DEFAULT_DATA = {
+            luce: "0,103",
+            gas: "0,37",
+            servizioLuce: "102",
+            servizioGas: "102",
+            scadenza: "19/02/26",
+            sconto: ""
+        };
+
+        function applyData(data) {
+            var d = data || DEFAULT_DATA;
+            document.getElementById('dyn-prezzo-luce').innerText = (d.luce || DEFAULT_DATA.luce) + ' €/kWh';
+            document.getElementById('dyn-prezzo-gas').innerText = (d.gas || DEFAULT_DATA.gas) + ' €/Smc';
+            document.getElementById('dyn-servizio-luce').innerText = (d.servizioLuce || DEFAULT_DATA.servizioLuce) + ' €/POD/Anno';
+            document.getElementById('dyn-servizio-gas').innerText = (d.servizioGas || DEFAULT_DATA.servizioGas) + ' €/PDR/Anno';
+            document.getElementById('dyn-scadenza').innerText = d.scadenza || DEFAULT_DATA.scadenza;
+            document.getElementById('dyn-sconto').innerText = d.sconto || '';
+        }
+
+        function loadRemoteData() {
+            var script = document.createElement('script');
+            script.src = CONFIG.dataScriptUrl + "?v=" + Date.now();
+            script.onload = function () {
+                applyData(window.datiSorgenia || DEFAULT_DATA);
+            };
+            script.onerror = function () {
+                applyData(DEFAULT_DATA);
+            };
+            document.head.appendChild(script);
+        }
+
+        loadRemoteData();
+    </script>
+</body>
+</html>
