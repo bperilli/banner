@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=300, height=250, initial-scale=1.0" />
+  <title>Banner Dinamico 300x250</title>
+  <style>
+    body, html { margin: 0; padding: 0; overflow: hidden; background: #f4f4f4; }
+
+    .banner {
+      width: 300px;
+      height: 250px;
+      background: linear-gradient(135deg, #153250 0%, #2a6391 100%);
+      color: white;
+      font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      position: relative;
+      cursor: pointer;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+
+    .header {
+      padding: 12px 10px 5px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      max-width: 135px;
+      height: 24px;
+    }
+
+    .logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      object-position: left center;
+    }
+
+    .validita {
+      font-size: 9px;
+      text-align: right;
+      opacity: 0.9;
+      line-height: 1.2;
+    }
+
+    .content { text-align: center; margin-top: 2px; }
+    .titolo { color: #d4e157; font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+    .sconto { font-size: 13px; font-weight: 700; margin-bottom: 10px; }
+    .hidden { display: none !important; }
+
+    .offers-container {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      padding: 0 10px;
+    }
+
+    .box {
+      background: rgba(14, 45, 75, 0.6);
+      border-radius: 12px;
+      padding: 10px 5px;
+      width: 125px;
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .label {
+      font-size: 11px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      display: inline-block;
+      background: #fff;
+      color: #153250;
+      padding: 1px 12px;
+      border-radius: 10px;
+    }
+
+    .prezzo { font-size: 14px; font-weight: 700; margin-top: 5px; color: #d4e157; }
+    .desc { font-size: 8px; opacity: 0.8; margin-top: 2px; line-height: 1.1; }
+
+    .cta-container { position: absolute; bottom: 22px; width: 100%; text-align: center; }
+
+    .cta {
+      background-color: #d4e157;
+      color: #153250;
+      padding: 7px 28px;
+      border-radius: 20px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 14px;
+      display: inline-block;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+      transition: 0.2s;
+    }
+
+    .cta:hover { transform: scale(1.05); background-color: #e6f560; }
+
+    .disclaimer {
+      position: absolute;
+      bottom: 4px;
+      width: 100%;
+      font-size: 6px;
+      text-align: center;
+      opacity: 0.55;
+      padding: 0 5px;
+      box-sizing: border-box;
+    }
+
+    .loading { font-size: 10px; opacity: 0.7; }
+  </style>
+</head>
+<body>
+  <div class="banner" id="banner" onclick="window.open(CONFIG.clickUrl, '_blank', 'noopener')">
+    <div class="header">
+      <div class="logo">
+        <img src="./Standard_On%20White_no-payoff@3x.png" alt="Sorgenia" />
+      </div>
+      <div class="validita" id="validita">Offerta Valida<br /><span id="validita-data">Fino al 19/02/26</span></div>
+    </div>
+
+    <div class="content">
+      <div class="titolo">Offerta a Prezzo Fisso per 12 mesi</div>
+      <div class="sconto hidden" id="sconto">Con <span id="sconto-valore">60</span>&euro; di Sconto in bolletta!</div>
+    </div>
+
+    <div class="offers-container">
+      <div class="box">
+        <span class="label">Luce</span>
+        <div id="prezzo-luce" class="prezzo loading">caricamento...</div>
+        <div class="desc">prezzo componente<br />energia</div>
+      </div>
+      <div class="box">
+        <span class="label">Gas</span>
+        <div id="prezzo-gas" class="prezzo loading">caricamento...</div>
+        <div class="desc">prezzo componente<br />gas</div>
+      </div>
+    </div>
+
+    <div class="cta-container">
+      <span class="cta">Scopri l'offerta</span>
+    </div>
+
+    <div class="disclaimer">*Prezzi riferiti a utenza domestica. Condizioni su sorgenia.it</div>
+  </div>
+
+  <script>
+    const CONFIG = {
+      csvUrl: "https://bperilli.github.io/rassegna/prezzi-banner.csv",
+      clickUrl: "https://www.sorgenia.it",
+      defaultLuce: "0,103",
+      defaultGas: "0,37",
+      defaultValidita: "19/02/26",
+      luceUnit: "€/kWh",
+      gasUnit: "€/Smc"
+    };
+
+    function splitCsvLine(line, delimiter) {
+      const out = [];
+      let current = "";
+      let inQuotes = false;
+
+      for (let i = 0; i < line.length; i += 1) {
+        const ch = line[i];
+        if (ch === '"') {
+          if (inQuotes && line[i + 1] === '"') {
+            current += '"';
+            i += 1;
+          } else {
+            inQuotes = !inQuotes;
+          }
+          continue;
+        }
+
+        if (ch === delimiter && !inQuotes) {
+          out.push(current.trim());
+          current = "";
+          continue;
+        }
+
+        current += ch;
+      }
+
+      out.push(current.trim());
+      return out;
+    }
+
+    function detectDelimiter(line) {
+      const semicolons = (line.match(/;/g) || []).length;
+      const commas = (line.match(/,/g) || []).length;
+      return semicolons >= commas ? ';' : ',';
+    }
+
+    function normalizeValue(value) {
+      return String(value || "")
+        .replace(/[^0-9,.-]/g, "")
+        .trim();
+    }
+
+    function formatPrice(value, unit) {
+      const cleaned = normalizeValue(value);
+      return cleaned ? `${cleaned} ${unit}` : null;
+    }
+
+    function normalizeDiscountValue(value) {
+      return String(value || "")
+        .replace(/[^0-9]/g, "")
+        .trim();
+    }
+
+    function normalizeDate(value) {
+      const raw = String(value || "").trim();
+      if (!raw) return null;
+      const clean = raw.replace(/-/g, "/");
+      const ddmmyyyy = clean.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+      if (ddmmyyyy) return `${ddmmyyyy[1]}/${ddmmyyyy[2]}/${ddmmyyyy[3]}`;
+      const yyyymmdd = clean.match(/^(\d{4})\/(\d{2})\/(\d{2})$/);
+      if (yyyymmdd) return `${yyyymmdd[3]}/${yyyymmdd[2]}/${yyyymmdd[1]}`;
+      const ddmmyy = clean.match(/^(\d{2})\/(\d{2})\/(\d{2})$/);
+      if (ddmmyy) return `${ddmmyy[1]}/${ddmmyy[2]}/20${ddmmyy[3]}`;
+      return clean;
+    }
+
+    function setPrices(luce, gas) {
+      const elLuce = document.getElementById("prezzo-luce");
+      const elGas = document.getElementById("prezzo-gas");
+      elLuce.textContent = luce;
+      elGas.textContent = gas;
+      elLuce.classList.remove("loading");
+      elGas.classList.remove("loading");
+    }
+
+    function setOfferInfo(validita, sconto) {
+      const validitaData = document.getElementById("validita-data");
+      const scontoRow = document.getElementById("sconto");
+      const scontoValore = document.getElementById("sconto-valore");
+
+      validitaData.textContent = `Fino al ${validita || CONFIG.defaultValidita}`;
+
+      if (sconto) {
+        scontoValore.textContent = sconto;
+        scontoRow.classList.remove("hidden");
+      } else {
+        scontoRow.classList.add("hidden");
+      }
+    }
+
+    function parsePrices(csvText) {
+      const rows = csvText
+        .split(/\r?\n/)
+        .map((r) => r.trim())
+        .filter(Boolean);
+
+      if (rows.length === 0) {
+        return null;
+      }
+
+      const delimiter = detectDelimiter(rows[0]);
+      const first = splitCsvLine(rows[0], delimiter).map((x) => x.toLowerCase());
+      const hasHeader = first.includes("luce") || first.includes("gas");
+
+      if (hasHeader) {
+        const dataRow = rows[1];
+        if (!dataRow) return null;
+        const headers = splitCsvLine(rows[0], delimiter).map((x) => x.toLowerCase());
+        const values = splitCsvLine(dataRow, delimiter);
+        const luceIdx = headers.findIndex((h) => h === "luce" || h === "prezzo_luce");
+        const gasIdx = headers.findIndex((h) => h === "gas" || h === "prezzo_gas");
+        const validitaIdx = headers.findIndex((h) =>
+          ["validita", "validità", "fino_al", "data_fine", "scadenza"].includes(h)
+        );
+        const scontoIdx = headers.findIndex((h) =>
+          ["sconto", "sconto_bolletta", "sconto_euro", "sconto_bollette"].includes(h)
+        );
+        if (luceIdx < 0 || gasIdx < 0) return null;
+        return {
+          luce: values[luceIdx],
+          gas: values[gasIdx],
+          validita: validitaIdx >= 0 ? values[validitaIdx] : null,
+          sconto: scontoIdx >= 0 ? values[scontoIdx] : null
+        };
+      }
+
+      const cols = splitCsvLine(rows[0], delimiter);
+      if (cols.length < 2) return null;
+      return { luce: cols[0], gas: cols[1], validita: cols[2] || null, sconto: cols[3] || null };
+    }
+
+    async function fetchPrices() {
+      try {
+        const res = await fetch(CONFIG.csvUrl, { cache: "no-store" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        const csv = await res.text();
+        const parsed = parsePrices(csv);
+        if (!parsed) throw new Error("CSV non valido");
+
+        const luce = formatPrice(parsed.luce, CONFIG.luceUnit);
+        const gas = formatPrice(parsed.gas, CONFIG.gasUnit);
+        if (!luce || !gas) throw new Error("Valori mancanti");
+
+        setPrices(luce, gas);
+        setOfferInfo(normalizeDate(parsed.validita), normalizeDiscountValue(parsed.sconto));
+      } catch (err) {
+        console.error("Errore caricamento CSV:", err);
+        setPrices(
+          `${CONFIG.defaultLuce} ${CONFIG.luceUnit}`,
+          `${CONFIG.defaultGas} ${CONFIG.gasUnit}`
+        );
+        setOfferInfo(CONFIG.defaultValidita, null);
+      }
+    }
+
+    fetchPrices();
+  </script>
+</body>
+</html>
